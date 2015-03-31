@@ -1,15 +1,15 @@
-#include "Solver.h"
+
 
 // ------ Include all algorithm header files below this line ------- //
+#include "Solver.h"
 
 #include "continuous/demo/Continue.h"
 #include "discrete/floodfill/FloodFill.h"
-#include "discrete/mack/MackAlgo.h"
 #include "discrete/misc/Forward.h"
 #include "discrete/wallFollow/LeftWallFollow.h"
 #include "discrete/wallFollow/RightWallFollow.h"
 #include "discrete/wallFollow/RandomizedWallFollow.h"
-
+#include "discrete/danAlgo.h"
 // ------ Include all algorithm header files above this line ------- //
 
 Solver::Solver(sim::MouseInterface* mouse) : m_mouse(mouse)
@@ -23,7 +23,8 @@ void Solver::solve() {
     // ------ Include all algorithm declarations below this line ------- //
 
     //demo::Continue algo;
-    floodfill::FloodFill algo;
+    danAlgo algo;
+//    floodfill::FloodFill algo;
     //mack::MackAlgo algo;
     //misc::Forward algo;
     //wallFollow::RightWallFollow algo;
