@@ -139,17 +139,21 @@ void keyInput(unsigned char key, int x, int y) {
         // Toggle mouse path visibility
         sim::S()->setMousePathVisible(!sim::S()->mousePathVisible());
     }
-    else if (key == 't' || key == 't') {
+    else if (key == 't' || key == 'T') {
         // Toggle wall truth visibility
         sim::S()->setWallTruthVisible(!sim::S()->wallTruthVisible());
+    }
+    else if (key == 'c' || key == 'C') {
+        // Toggle tile colors
+        sim::S()->setTileColorsVisible(!sim::S()->tileColorsVisible());
+    }
+    else if (key == 'q' || key == 'Q') {
+        // Quit
+        sim::quit();
     }
     else if (std::string("0123456789").find(key) != std::string::npos) {
         // Press an input button
         int inputButton = std::string("0123456789").find(key);
         sim::S()->setInputButtonPressed(inputButton, true);
-    }
-    else if (key == 'q' || key == 'Q') {
-        // Quit
-        sim::quit();
     }
 }
