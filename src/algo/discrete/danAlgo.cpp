@@ -48,7 +48,7 @@ void danAlgo::print(vector<vector<struct cell>> grid){
 }
 
 void danAlgo::tremaux(sim::MouseInterface* mouse, vector<vector<danAlgo::cell>> grid){
-    print(grid);
+//    print(grid);
     int compass = 1; //N:1, E:2, S:3, W:4;
     int x = 0; //horizontal 
     int y = 15; //vertical
