@@ -48,72 +48,79 @@ void danAlgo::print(vector<vector<struct cell>> grid){
 }
 
 void danAlgo::tremaux(sim::MouseInterface* mouse, vector<vector<danAlgo::cell>> grid){
-//    print(grid);
+    //    print(grid);
     int compass = 1; //N:1, E:2, S:3, W:4;
     int x = 0; //horizontal 
     int y = 15; //vertical
+    int xright, xleft, xstraight, yright, yleft, ystraight; 
     while(1){
-        if(!mouse->wallRight() && grid[x][y].visited==0){
-
-            grid[x][y].visited=1; 
-            if(compass == 1){
-                x++;
-                compass = 2;
-            }
-            else if (compass == 2){
-                y++;
-                compass = 3;
-            }
-            else if(compass == 3){
-                x--;
-                compass = 4;
-            }
-            else if(compass == 4){
-                y--;
-                compass = 1;
-            }
+        xright = xleft = xstraight = x;
+        yright = yleft = ystraight = y;
+        if(compass == 1){
+            xright = x+1;
+            xleft = x-1;
+            ystraight = y-1;
+        }
+        if (compass == 2){
+            yright = y+1;
+            yleft = y-1;
+            xstraight = x+1;
+        }
+        if (compass == 3){
+            xright = x-1;
+            xleft = x+1;
+            ystraight = y+1;
+        }
+        if (compass == 4){
+            yright = y-1;
+            yleft = y+1;
+            xstraight = x-1;
+        }
+        // cout << "Current pos: " << x <<"," << y << endl;
+        if(!mouse->wallRight() && grid[xright][yright].visited == 0){
+            grid[x][y].visited=1;
+            cout << "wallright" << endl;
             mouse->turnRight();
             mouse->moveForward();
-            cout << "R x: " << x << " y: " << y << " compass: " << compass << endl;
+            x = xright;
+            y = yright;
+            compass == 4 ? compass = 1 : compass++;
         }
-        else if (!mouse->wallLeft() && grid[x][y].visited==0){
-            grid[x][y].visited=1; 
-            if(compass == 1){
-                x--;
-                compass = 4;
-            }
-            else if (compass == 2){
-                y--;
-                compass = 1;
-            }
-            else if(compass == 3){
-                x++;
-                compass = 2;
-            }
-            else if(compass==4){
-                y++;
-                compass = 3;
-            }
+        else if (!mouse->wallLeft() && grid[xleft][yleft].visited == 0){
+            cout << "wall left" << endl;
+            grid[x][y].visited=1;
+            x = xleft;
+            y = yleft;
+            compass == 1 ? compass = 4 : compass--;
             mouse->turnLeft();
             mouse->moveForward();
-            cout << "L x: " << x << " y: " << y << " compass: " << compass << endl;
+
         }
-        else if(!mouse->wallFront() && grid[x][y].visited==0){
+        else if(!mouse->wallFront() && grid[xstraight][ystraight].visited == 0){
+            cout << "wall straight" << endl;
             grid[x][y].visited=1; 
-            if(compass==1)
-                y--;
-            else if (compass==2)
-                x++;
-            else if(compass==3)
-                y++;
-            else if(compass==4)
-                x--;
+            x = xstraight;
+            y = ystraight;
             mouse->moveForward();
-            cout << "F x: " << x << " y: " << y << " compass: " << compass << endl;
         }
         else{
+            if(compass == 1){
+                compass = 2;
+                mouse->turnLeft();
+                mouse->turnLeft();
+                mouse->moveForward();
+                x--;
+            }
+            else if(compass == 2){
 
-            //cout << "backtrace" << endl;
+            }
+            else if(compass == 3){
+
+            }
+            else if(compass == 4){
+
+            }    
+            //cout << "backtrace" << compass <<  endl;
         }
 
     }
