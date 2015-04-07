@@ -56,6 +56,7 @@ void danAlgo::tremaux(sim::MouseInterface* mouse, vector<vector<danAlgo::cell>> 
     while(1){
         xright = xleft = xstraight = x;
         yright = yleft = ystraight = y;
+        //calculates next block to move
         if(compass == 1){
             xright = x+1;
             xleft = x-1;
@@ -76,10 +77,9 @@ void danAlgo::tremaux(sim::MouseInterface* mouse, vector<vector<danAlgo::cell>> 
             yleft = y+1;
             xstraight = x-1;
         }
-        // cout << "Current pos: " << x <<"," << y << endl;
+        //check to see if next block has been visited
         if(!mouse->wallRight() && grid[xright][yright].visited == 0){
             grid[x][y].visited=1;
-            cout << "wallright" << endl;
             mouse->turnRight();
             mouse->moveForward();
             x = xright;
@@ -87,39 +87,27 @@ void danAlgo::tremaux(sim::MouseInterface* mouse, vector<vector<danAlgo::cell>> 
             compass == 4 ? compass = 1 : compass++;
         }
         else if (!mouse->wallLeft() && grid[xleft][yleft].visited == 0){
-            cout << "wall left" << endl;
             grid[x][y].visited=1;
+            mouse->turnLeft();
+            mouse->moveForward();
             x = xleft;
             y = yleft;
             compass == 1 ? compass = 4 : compass--;
-            mouse->turnLeft();
-            mouse->moveForward();
 
         }
         else if(!mouse->wallFront() && grid[xstraight][ystraight].visited == 0){
-            cout << "wall straight" << endl;
             grid[x][y].visited=1; 
             x = xstraight;
             y = ystraight;
             mouse->moveForward();
         }
         else{
-            if(compass == 1){
-                compass = 2;
+            if(!mouse->wallFront()){
+                cout << "wall in front" << endl;
+                compass > 2 ? compass = compass-2 : compass+2;
                 mouse->turnLeft();
-                mouse->turnLeft();
-                mouse->moveForward();
-                x--;
-            }
-            else if(compass == 2){
-
-            }
-            else if(compass == 3){
-
-            }
-            else if(compass == 4){
-
-            }    
+                mouse->turnLeft();         
+            }   
             //cout << "backtrace" << compass <<  endl;
         }
 
