@@ -1,6 +1,7 @@
 #include "danAlgo.h"
 #include <iostream>
 #include <vector>
+#include <stack>
 
 using namespace std;
 
@@ -53,6 +54,7 @@ void danAlgo::tremaux(sim::MouseInterface* mouse, vector<vector<danAlgo::cell>> 
     int x = 0; //horizontal 
     int y = 15; //vertical
     int xright, xleft, xstraight, yright, yleft, ystraight; 
+    stack<int> moves;
     while(1){
         xright = xleft = xstraight = x;
         yright = yleft = ystraight = y;
@@ -79,16 +81,18 @@ void danAlgo::tremaux(sim::MouseInterface* mouse, vector<vector<danAlgo::cell>> 
         }
         //check to see if next block has been visited
         if(!mouse->wallRight() && grid[xright][yright].visited == 0){
-            grid[x][y].visited++;
+            grid[x][y].visited=1;
             mouse->turnRight();
             mouse->moveForward();
+            moves.push(3);
             x = xright;
             y = yright;
             compass == 4 ? compass = 1 : compass++;
         }
         else if (!mouse->wallLeft() && grid[xleft][yleft].visited == 0){
-            grid[x][y].visited++;
+            grid[x][y].visited=1;
             mouse->turnLeft();
+            moves.push(2);
             mouse->moveForward();
             x = xleft;
             y = yleft;
@@ -96,22 +100,23 @@ void danAlgo::tremaux(sim::MouseInterface* mouse, vector<vector<danAlgo::cell>> 
 
         }
         else if(!mouse->wallFront() && grid[xstraight][ystraight].visited == 0){
-            grid[x][y].visited++; 
+            grid[x][y].visited=1; 
             x = xstraight;
             y = ystraight;
             mouse->moveForward();
+            moves.push(1);
         }
         else{
+            
             if(mouse->wallFront() || (!mouse->wallFront() && grid[xstraight][ystraight].visited==1)){
-                cout << "wall in front" << endl;
-                cout << "compass before: " << compass;
+                cout << "wall in front" <<x<<y << endl;
                 compass > 2 ? compass-=2 : compass+=2;
-                cout << " compass after: " << compass << endl;
                 mouse->turnLeft();
-                mouse->turnLeft();         
+                mouse->turnLeft();      
             }
-            while(1){
-                 
+
+            /*
+            while(1){ 
                 xright = xleft = xstraight = x;
                 yright = yleft = ystraight = y;
                 //calculates next block to move
@@ -136,7 +141,7 @@ void danAlgo::tremaux(sim::MouseInterface* mouse, vector<vector<danAlgo::cell>> 
                     xstraight = x-1;
                 }
                 if(!mouse->wallRight() && grid[xright][yright].visited==1){
-                    grid[x][y].visited=2;
+                   // grid[x][y].visited=2;
                     mouse->turnRight();
                     mouse->moveForward();
                     x = xright;
@@ -144,7 +149,7 @@ void danAlgo::tremaux(sim::MouseInterface* mouse, vector<vector<danAlgo::cell>> 
                     compass == 4 ? compass = 1 : compass++;
                 }
                 else if (!mouse->wallLeft() && grid[xleft][yleft].visited == 1){
-                    grid[x][y].visited=2;
+                   // grid[x][y].visited=2;
                     mouse->turnLeft();
                     mouse->moveForward();
                     x = xleft;
@@ -159,19 +164,22 @@ void danAlgo::tremaux(sim::MouseInterface* mouse, vector<vector<danAlgo::cell>> 
                     mouse->moveForward();
                 }
                 if(!mouse->wallRight() && grid[xright][yright].visited==0){
-                   // grid[x][y].visited++;
+                   // grid[x][y].visited=2;
+                    cout << "Found right " << x << "," << y << endl;
                     break;
                 }
                 if(!mouse->wallLeft() && grid[xleft][yleft].visited==0){
-                   // grid[x][y].visited++;
+                   // grid[x][y].visited=2;
+                    cout << "Found left " << x << "," << y << endl;
                     break;
                 }
                 if(!mouse->wallFront() && grid[xstraight][ystraight].visited==0){
-                    //grid[x][y].visited++;
+                    //grid[x][y].visited=2;
+                    cout << "Found front " << x << "," << y << endl;
                     break;
                 }
             }
-            //cout << "backtrace" << compass <<  endl;
+*/            //cout << "backtrace" << compass <<  endl;
         }
 
     }
