@@ -79,7 +79,7 @@ void danAlgo::tremaux(sim::MouseInterface* mouse, vector<vector<danAlgo::cell>> 
         }
         //check to see if next block has been visited
         if(!mouse->wallRight() && grid[xright][yright].visited == 0){
-            grid[x][y].visited=1;
+            grid[x][y].visited++;
             mouse->turnRight();
             mouse->moveForward();
             x = xright;
@@ -87,7 +87,7 @@ void danAlgo::tremaux(sim::MouseInterface* mouse, vector<vector<danAlgo::cell>> 
             compass == 4 ? compass = 1 : compass++;
         }
         else if (!mouse->wallLeft() && grid[xleft][yleft].visited == 0){
-            grid[x][y].visited=1;
+            grid[x][y].visited++;
             mouse->turnLeft();
             mouse->moveForward();
             x = xleft;
@@ -96,18 +96,81 @@ void danAlgo::tremaux(sim::MouseInterface* mouse, vector<vector<danAlgo::cell>> 
 
         }
         else if(!mouse->wallFront() && grid[xstraight][ystraight].visited == 0){
-            grid[x][y].visited=1; 
+            grid[x][y].visited++; 
             x = xstraight;
             y = ystraight;
             mouse->moveForward();
         }
         else{
-            if(!mouse->wallFront()){
+            if(mouse->wallFront() || (!mouse->wallFront() && grid[xstraight][ystraight].visited==1)){
                 cout << "wall in front" << endl;
-                compass > 2 ? compass = compass-2 : compass+2;
+                cout << "compass before: " << compass;
+                compass > 2 ? compass-=2 : compass+=2;
+                cout << " compass after: " << compass << endl;
                 mouse->turnLeft();
                 mouse->turnLeft();         
-            }   
+            }
+            while(1){
+                 
+                xright = xleft = xstraight = x;
+                yright = yleft = ystraight = y;
+                //calculates next block to move
+                if(compass == 1){
+                    xright = x+1;
+                    xleft = x-1;
+                    ystraight = y-1;
+                }
+                if (compass == 2){
+                    yright = y+1;
+                    yleft = y-1;
+                    xstraight = x+1;
+                }
+                if (compass == 3){
+                    xright = x-1;
+                    xleft = x+1;
+                    ystraight = y+1;
+                }
+                if (compass == 4){
+                    yright = y-1;
+                    yleft = y+1;
+                    xstraight = x-1;
+                }
+                if(!mouse->wallRight() && grid[xright][yright].visited==1){
+                    grid[x][y].visited=2;
+                    mouse->turnRight();
+                    mouse->moveForward();
+                    x = xright;
+                    y = yright;
+                    compass == 4 ? compass = 1 : compass++;
+                }
+                else if (!mouse->wallLeft() && grid[xleft][yleft].visited == 1){
+                    grid[x][y].visited=2;
+                    mouse->turnLeft();
+                    mouse->moveForward();
+                    x = xleft;
+                    y = yleft;
+                    compass == 1 ? compass = 4 : compass--;
+
+                }
+                else if(!mouse->wallFront() && grid[xstraight][ystraight].visited == 1){
+                    grid[x][y].visited=2; 
+                    x = xstraight;
+                    y = ystraight;
+                    mouse->moveForward();
+                }
+                if(!mouse->wallRight() && grid[xright][yright].visited==0){
+                   // grid[x][y].visited++;
+                    break;
+                }
+                if(!mouse->wallLeft() && grid[xleft][yleft].visited==0){
+                   // grid[x][y].visited++;
+                    break;
+                }
+                if(!mouse->wallFront() && grid[xstraight][ystraight].visited==0){
+                    //grid[x][y].visited++;
+                    break;
+                }
+            }
             //cout << "backtrace" << compass <<  endl;
         }
 
