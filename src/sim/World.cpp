@@ -44,7 +44,7 @@ void World::simulate() {
         // what we want (since the framerate is perceived in real-time and not CPU time).
         double end(sim::getHighResTime());
         double duration = end - start;
-
+/*
         // Notify the use of a late mouse position update
         if (P()->printLateMousePositionUpdates() && duration > 1.0/sim::P()->mousePositionUpdateRate()) {
             sim::print(std::string("A mouse position update was late by ")
@@ -53,7 +53,7 @@ void World::simulate() {
                 + std::to_string((duration - 1.0/P()->mousePositionUpdateRate())/(1.0/P()->mousePositionUpdateRate()) * 100)
                 + std::string(" percent late."));
         }
-
+*/
         // Sleep the appropriate amout of time, based on the mouse update duration
         sim::sleep(sim::Seconds(std::max(0.0, 1.0/sim::P()->mousePositionUpdateRate() - duration)));
     }

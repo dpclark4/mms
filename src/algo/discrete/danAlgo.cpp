@@ -107,16 +107,18 @@ void danAlgo::tremaux(sim::MouseInterface* mouse, vector<vector<danAlgo::cell>> 
             moves.push(1);
         }
         else{
-            
-            if(mouse->wallFront() || (!mouse->wallFront() && grid[xstraight][ystraight].visited==1)){
-                cout << "wall in front" <<x<<y << endl;
-                compass > 2 ? compass-=2 : compass+=2;
-                mouse->turnLeft();
-                mouse->turnLeft();      
-            }
-
-            /*
-            while(1){ 
+            bool madeMove = false;
+            while(1){
+                madeMove = false;
+                if(mouse->wallFront()) {
+                    cout << "wall in front, turning around" << endl;
+                    compass > 2 ? compass-=2 : compass+=2;
+                    mouse->turnLeft();
+                    mouse->turnLeft();   
+                    madeMove = true;   
+                    grid[x][y].visited==2;
+                }
+               // cout << "while compass: " << compass << endl; 
                 xright = xleft = xstraight = x;
                 yright = yleft = ystraight = y;
                 //calculates next block to move
@@ -140,46 +142,70 @@ void danAlgo::tremaux(sim::MouseInterface* mouse, vector<vector<danAlgo::cell>> 
                     yleft = y+1;
                     xstraight = x-1;
                 }
-                if(!mouse->wallRight() && grid[xright][yright].visited==1){
-                   // grid[x][y].visited=2;
-                    mouse->turnRight();
-                    mouse->moveForward();
-                    x = xright;
-                    y = yright;
-                    compass == 4 ? compass = 1 : compass++;
-                }
-                else if (!mouse->wallLeft() && grid[xleft][yleft].visited == 1){
-                   // grid[x][y].visited=2;
+               
+                /*
+                   if(!mouse->wallFront() && grid[xstraight][ystraight].visited != 0){
+                   cout << "can't move forward: " <<x << "," <<y << endl;
+                   compass > 2 ? compass-=2 : compass+=2;
+                   mouse->turnLeft();
+                   mouse->turnLeft();      
+                   grid[x][y].visited==2;
+                   }
+                 */
+                if (!mouse->wallLeft() && grid[xleft][yleft].visited == 1){
+                    //grid[x][y].visited=2;
                     mouse->turnLeft();
                     mouse->moveForward();
                     x = xleft;
                     y = yleft;
+                    madeMove = true;
                     compass == 1 ? compass = 4 : compass--;
 
                 }
+
+                else if(!mouse->wallRight() && grid[xright][yright].visited==1){
+                    //grid[x][y].visited=2;
+                    mouse->turnRight();
+                    mouse->moveForward();
+                    x = xright;
+                    y = yright;
+                    madeMove = true;
+                    compass == 4 ? compass = 1 : compass++;
+                }
+
                 else if(!mouse->wallFront() && grid[xstraight][ystraight].visited == 1){
-                    grid[x][y].visited=2; 
+                    //grid[x][y].visited=2; 
                     x = xstraight;
                     y = ystraight;
+                    madeMove = true;
                     mouse->moveForward();
                 }
                 if(!mouse->wallRight() && grid[xright][yright].visited==0){
-                   // grid[x][y].visited=2;
+                    grid[x][y].visited=2;
                     cout << "Found right " << x << "," << y << endl;
                     break;
                 }
                 if(!mouse->wallLeft() && grid[xleft][yleft].visited==0){
-                   // grid[x][y].visited=2;
+                    grid[x][y].visited=2;
                     cout << "Found left " << x << "," << y << endl;
                     break;
                 }
                 if(!mouse->wallFront() && grid[xstraight][ystraight].visited==0){
-                    //grid[x][y].visited=2;
-                    cout << "Found front " << x << "," << y << endl;
+                    grid[x][y].visited=2;
+                    cout << "Found front " << x << "," << y<< "c: " << compass << endl;
                     break;
                 }
+                if(madeMove == false){
+                    cout << "didn't make move this round" << endl;
+                    compass > 2 ? compass-=2 : compass+=2;
+                    mouse->turnLeft();
+                    mouse->turnLeft();      
+                    grid[x][y].visited==2;
+                    cout << grid[x][y].visited << endl;
+                    madeMove = true;
+                }
             }
-*/            //cout << "backtrace" << compass <<  endl;
+            //cout << "backtrace" << compass <<  endl;
         }
 
     }
