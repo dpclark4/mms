@@ -11,9 +11,9 @@
 namespace sim {
 
 Sensor::Sensor(const Coordinate& position, const Distance& radius, const Angle& rotation, const Distance& range,
-        const Angle& halfWidth, const Time& readTime) :
+        const Angle& halfWidth, const Duration& readDuration) :
         m_initialTranslation(position), m_initialRotation(rotation), m_range(range), m_halfWidth(halfWidth),
-        m_readTime(readTime) {
+        m_readDuration(readDuration) {
 
     // Create the polygon for the body of the sensor
     std::vector<Cartesian> polygon;
@@ -63,19 +63,19 @@ Polygon Sensor::getCurrentView(const Cartesian& currentPosition, const Radians& 
     for (int i = 0; i < edge.size(); i += 1) {
 
         // ... for each tile within the range of the edge point ...
-        for (const Tile* tile : lineSegmentTileCover(currentPosition, edge.at(i), maze)) {
+        for (const Tile* tile : GeometryUtilities::lineSegmentTileCover(currentPosition, edge.at(i), maze)) {
 
             // ... iterate through all of the tile's polygons ...
             for (std::vector<Polygon> group : {tile->getActualWallPolygons(), tile->getCornerPolygons()}) {
                 for (Polygon obstacle : group) {
-                    for (std::pair<Cartesian, Cartesian> A : getLineSegments(obstacle)) {
+                    for (std::pair<Cartesian, Cartesian> A : GeometryUtilities::getLineSegments(obstacle)) {
 
                         // TODO: Is there a way to "join" some of the line segments, so that we can do less work?
 
                         // ... and check for intersections
                         std::pair<Cartesian, Cartesian> B = std::make_pair(currentPosition, edge.at(i));
-                        if (linesIntersect(A, B)) {
-                            edge.at(i) = getIntersectionPoint(A, B);
+                        if (GeometryUtilities::linesIntersect(A, B)) {
+                            edge.at(i) = GeometryUtilities::getIntersectionPoint(A, B);
                         }
                     }
                 }
@@ -88,8 +88,8 @@ Polygon Sensor::getCurrentView(const Cartesian& currentPosition, const Radians& 
     return Polygon(edge);
 }
 
-Seconds Sensor::getReadTime() const {
-    return m_readTime;
+Seconds Sensor::getReadDuration() const {
+    return m_readDuration;
 }
 
 } // namespace sim

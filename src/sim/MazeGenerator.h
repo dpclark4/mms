@@ -18,6 +18,8 @@ public:
 
 private:
 
+    // TODO: Move Tomasz's stuff into another files
+
     // A private constructor to restrict creation of any MazeGenerator objects
     MazeGenerator();
 
@@ -44,7 +46,6 @@ private:
     */
 };
 
-static const std::string DEFAULT_MAZE_ALGO = "TOMASZ";
 static const std::map<std::string, MazeGenerator::Algorithm> MAZE_ALGOS = {
     {"TOMASZ", MazeGenerator::TOMASZ},
     {"RANDOM", MazeGenerator::RANDOM},

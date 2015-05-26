@@ -18,6 +18,12 @@ class Mouse {
 public:
     Mouse(const Maze* maze);
 
+    // Returns whether or not the mouse was previously initialized
+    bool getInitialized();
+
+    // Initializes the mouse (body, sensors, etc.). Returns true if successful, false if not.
+    bool initialize(const std::string& mouseFile);
+
     // Retrieves the polygon comprised of all parts of the mouse that could collide with walls
     Polygon getCollisionPolygon() const;
 
@@ -37,16 +43,19 @@ public:
     std::vector<Polygon> getViewPolygons() const;
 
     // Instruct the mouse to update its own position based on how much simulation time has elapsed
-    void update(const Time& elapsed);
+    void update(const Duration& elapsed);
 
     // An atomic interface for setting the wheel speeds
     void setWheelSpeeds(const AngularVelocity& leftWheelSpeed, const AngularVelocity& rightWheelSpeed);
+
+    // Returns whether or not the mouse has a sensor by a particular name
+    bool hasSensor(const std::string& name) const;
 
     // Read a sensor, and returns a value from 0.0 (completely free) to 1.0 (completely blocked)
     float read(const std::string& name) const;
 
     // Get the read time of a particular sensor
-    Seconds getReadTime(const std::string& name) const;
+    Seconds getReadDuration(const std::string& name) const;
 
     // For use with the discrete interface *only*
     Cartesian getInitialTranslation() const;
@@ -57,6 +66,9 @@ public:
 private:
     // Used for the sensor readings
     const Maze* m_maze;
+
+    // Whether or not the mouse (including body and sensors) was initialized (by the algorithm)
+    bool m_initialized;
 
     // The mouse, as it's positioned at the start execution
     Cartesian m_initialTranslation;

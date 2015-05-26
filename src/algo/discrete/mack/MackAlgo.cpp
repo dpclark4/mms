@@ -11,15 +11,19 @@
 #include "CellHeap.h"
 #include "Options.h"
 
-// TODO:
-// 1) Add a history/reset button
-// 2) Color buffer layer to get rid of the flickering
+#if (!SIMULATOR)
+extern char movesBuffer[256];
+extern bool walls_global[3];
+extern volatile bool movesReady;
+extern volatile bool movesDoneAndWallsSet;
+#endif
 
 namespace mack {
 
 #if (SIMULATOR)
 void MackAlgo::solve(sim::MouseInterface* mouse) {
     m_mouse = mouse;
+    mouse->initializeMouse("mouse.xml");
     m_mouse->declareInterfaceType(sim::DISCRETE);
 #else
 void MackAlgo::solve() {
@@ -46,25 +50,19 @@ void MackAlgo::solve() {
     while (true) {
 
 #if (!SIMULATOR)
-        while (!wallsReady) { // TODO: Variable name here
+        while (!movesDoneAndWallsSet) {
             // Wait for the walls to be ready
         }
 #endif
 
-        // Read the walls
-        readWalls(); // TODO: Only read if we haven't read before
+        // Read the walls if not known
+        readWalls();
 
-        // Retrieve the next move
-        Cell* moveTo = getNextMove();
-        if (moveTo == NULL) {
-#if (SIMULATOR)
-            std::cout << "Unsolvable maze detected. I'm giving up..." << std::endl;
-#endif
-            break;
+        // Move as far as possible
+        if (!move()) {
+            // If we've detected an unsolvable maze, just die
+            return;
         }
-
-        // Move the mouse by one cell
-        moveOneCell(moveTo); // TODO: Move multiple cells
 
         // Change the destination
         if (m_onWayToCenter ? inGoal(m_x, m_y) : m_x == 0 && m_y == 0) {
@@ -73,7 +71,7 @@ void MackAlgo::solve() {
     }
 }
 
-Cell* MackAlgo::getNextMove() {
+bool MackAlgo::move() {
 
     // Use Dijkstra's algo to determine the next best move
 
@@ -132,21 +130,67 @@ Cell* MackAlgo::getNextMove() {
     }
 
 #if (SIMULATOR)
-    resetColors();
+    m_mouse->clearAllTileColor();
     colorCenter('G');
 #endif
 
-    Cell* prev = NULL;
-    Cell* current = getClosestDestinationCell();
-    while (current->getParent() != NULL) {
+    // If there's no path to the destination, the maze is unsolvable
+    if (getClosestDestinationCell()->getParent() == NULL) {
+#if (SIMULATOR)
+        std::cout << "Unsolvable maze detected. I'm giving up..." << std::endl;
+#endif
+        return false;
+    }
+
+    // WARNING: Ugly hack to reverse the "list" of parents to a "list" of children.
+    // We need this so that we can buffer the moves for the drive code.
+    Cell* next = getClosestDestinationCell();
+#if (SIMULATOR)
+    setColor(next->getX(), next->getY(), 'B');
+#endif
+    Cell* current = next->getParent();
+    Cell* prev = current->getParent();
+    next->setParent(NULL);
+    while (prev != NULL) {
 #if (SIMULATOR)
         setColor(current->getX(), current->getY(), 'B');
 #endif
-        prev = current;
-        current = current->getParent();
+        current->setParent(next);
+        next = current;
+        current = prev;
+        prev = current->getParent();
     }
-    
-    return prev;
+
+    // Displays the color buffer
+#if (SIMULATOR)
+    Cell* colorCurrent = current;
+    Cell* colorNext = next;
+    while (colorNext != NULL && colorCurrent->isKnown(colorNext->getSourceDirection())) {
+        setColor(colorNext->getX(), colorNext->getY(), 'Y');
+        colorCurrent = colorNext;
+        colorNext = colorNext->getParent();
+    }
+#endif
+
+    // First, make sure that we reset the move buffer index
+    m_moveBufferIndex = 0;
+
+    // WARNING: As a result of the ugly hack to reverse the list, we have to use
+    // the parent field of the cells, though its really a child pointer at this point
+    while (next != NULL && current->isKnown(next->getSourceDirection())) {
+        moveOneCell(next);
+        current = next;
+        next = next->getParent();
+    }
+
+    // Terminate the buffer index and tell the control code the moves are ready
+#if (!SIMULATOR)
+    movesBuffer[m_moveBufferIndex] = '\0';
+    movesReady = true;
+#endif
+
+    // Successful move
+    return true;
 }
 
 float MackAlgo::getTurnCost() {
@@ -216,16 +260,16 @@ void MackAlgo::initializeDestinationDistance() {
 Cell* MackAlgo::getClosestDestinationCell() {
     Cell* closest = NULL;
     if (m_onWayToCenter) {
-                closest = min(closest, &m_maze[(MAZE_WIDTH - 1) / 2][(MAZE_HEIGHT - 1) / 2]);
+                closest = cellMin(closest, &m_maze[(MAZE_WIDTH - 1) / 2][(MAZE_HEIGHT - 1) / 2]);
         if (MAZE_WIDTH % 2 == 0) {
-                closest = min(closest, &m_maze[ MAZE_WIDTH      / 2][(MAZE_HEIGHT - 1) / 2]);
+                closest = cellMin(closest, &m_maze[ MAZE_WIDTH      / 2][(MAZE_HEIGHT - 1) / 2]);
             if (MAZE_HEIGHT % 2 == 0) {
-                closest = min(closest, &m_maze[(MAZE_WIDTH - 1) / 2][ MAZE_HEIGHT      / 2]);
-                closest = min(closest, &m_maze[ MAZE_WIDTH      / 2][ MAZE_HEIGHT      / 2]);
+                closest = cellMin(closest, &m_maze[(MAZE_WIDTH - 1) / 2][ MAZE_HEIGHT      / 2]);
+                closest = cellMin(closest, &m_maze[ MAZE_WIDTH      / 2][ MAZE_HEIGHT      / 2]);
             }
         }
         else if (MAZE_HEIGHT % 2 == 0) {
-                closest = min(closest, &m_maze[(MAZE_WIDTH - 1) / 2][ MAZE_HEIGHT      / 2]);
+                closest = cellMin(closest, &m_maze[(MAZE_WIDTH - 1) / 2][ MAZE_HEIGHT      / 2]);
         }
     }
     else {
@@ -234,7 +278,7 @@ Cell* MackAlgo::getClosestDestinationCell() {
     return closest;
 }
 
-Cell* MackAlgo::min(Cell* one, Cell* two) {
+Cell* MackAlgo::cellMin(Cell* one, Cell* two) {
     if (one == NULL) {
         return two;
     }
@@ -248,23 +292,37 @@ void MackAlgo::readWalls() {
     bool wallRight = m_mouse->wallRight();
     bool wallLeft = m_mouse->wallLeft();
 #else
-    bool wallFront = false; // TODO
-    bool wallRight = false;
-    bool wallLeft = false;
+    bool wallLeft = walls_global[0];
+    bool wallFront = walls_global[1];
+    bool wallRight = walls_global[2];
+    movesDoneAndWallsSet = false;
 #endif
 
-    m_maze[m_x][m_y].setWall(m_d, wallFront);
-    m_maze[m_x][m_y].setWall((m_d+1)%4, wallRight);
-    m_maze[m_x][m_y].setWall((m_d+3)%4, wallLeft);
+    if (!m_maze[m_x][m_y].isKnown(m_d)) {
+        m_maze[m_x][m_y].setWall(m_d, wallFront);
+        m_maze[m_x][m_y].setKnown(m_d, true);
+        if (spaceFront()) {
+            getFrontCell()->setWall((m_d+2)%4, wallFront);
+            getFrontCell()->setKnown((m_d+2)%4, true);
+        }
+    }
 
-    if (spaceFront()) {
-        getFrontCell()->setWall((m_d+2)%4, wallFront);
+    if (!m_maze[m_x][m_y].isKnown((m_d+1)%4)) {
+        m_maze[m_x][m_y].setWall((m_d+1)%4, wallRight);
+        m_maze[m_x][m_y].setKnown((m_d+1)%4, true);
+        if (spaceRight()) {
+            getRightCell()->setWall((m_d+3)%4, wallRight);
+            getRightCell()->setKnown((m_d+3)%4, true);
+        }
     }
-    if (spaceLeft()) {
-        getLeftCell()->setWall((m_d+1)%4, wallLeft);
-    }
-    if (spaceRight()) {
-        getRightCell()->setWall((m_d+3)%4, wallRight);
+
+    if (!m_maze[m_x][m_y].isKnown((m_d+3)%4)) {
+        m_maze[m_x][m_y].setWall((m_d+3)%4, wallLeft);
+        m_maze[m_x][m_y].setKnown((m_d+3)%4, true);
+        if (spaceLeft()) {
+            getLeftCell()->setWall((m_d+1)%4, wallLeft);
+            getLeftCell()->setKnown((m_d+1)%4, true);
+        }
     }
 }
 
@@ -286,24 +344,19 @@ bool MackAlgo::inGoal(int x, int y) {
     return horizontal && vertical;
 }
 
-#if (SIMULATOR)
-void MackAlgo::turnLeft() {
+void MackAlgo::turnLeftUpdateState() {
     m_d = (m_d + 3) % 4;
-    m_mouse->turnLeft();
 }
 
-void MackAlgo::turnRight() {
+void MackAlgo::turnRightUpdateState() {
     m_d = (m_d + 1) % 4;
-    m_mouse->turnRight();
 }
 
-void MackAlgo::turnAround() {
+void MackAlgo::turnAroundUpdateState() {
     m_d = (m_d + 2) % 4;
-    m_mouse->turnAround();
 }
-#endif
 
-void MackAlgo::moveForward() {
+void MackAlgo::moveForwardUpdateState() {
     switch (m_d){
         case NORTH:
             m_y += 1;
@@ -318,11 +371,33 @@ void MackAlgo::moveForward() {
             m_x -= 1;
             break;
     }
+}
+
+#if (SIMULATOR)
+void MackAlgo::turnLeft() {
+    turnLeftUpdateState();
+    m_mouse->turnLeft();
+}
+
+void MackAlgo::turnRight() {
+    turnRightUpdateState();
+    m_mouse->turnRight();
+}
+
+void MackAlgo::turnAround() {
+    turnAroundUpdateState();
+    m_mouse->turnAround();
+}
+#endif
+
+void MackAlgo::moveForward() {
 #if (SIMULATOR)
     m_mouse->moveForward();
 #else
-    // TODO
+    movesBuffer[m_moveBufferIndex] = 'f';
+    m_moveBufferIndex += 1;
 #endif
+    moveForwardUpdateState();
 }
 
 void MackAlgo::leftAndForward() {
@@ -330,7 +405,10 @@ void MackAlgo::leftAndForward() {
     turnLeft();
     moveForward();
 #else
-    // TODO
+    movesBuffer[m_moveBufferIndex] = 'l';
+    m_moveBufferIndex += 1;
+    turnLeftUpdateState();
+    moveForwardUpdateState();
 #endif
 }
 
@@ -339,7 +417,10 @@ void MackAlgo::rightAndForward() {
     turnRight();
     moveForward();
 #else
-    // TODO
+    movesBuffer[m_moveBufferIndex] = 'r';
+    m_moveBufferIndex += 1;
+    turnRightUpdateState();
+    moveForwardUpdateState();
 #endif
 }
 
@@ -348,7 +429,12 @@ void MackAlgo::aroundAndForward() {
     turnAround();
     moveForward();
 #else
-    // TODO
+    movesBuffer[m_moveBufferIndex] = 'a';
+    m_moveBufferIndex += 1;
+    movesBuffer[m_moveBufferIndex] = 'f';
+    m_moveBufferIndex += 1;
+    turnAroundUpdateState();
+    moveForwardUpdateState();
 #endif
 }
 
@@ -507,11 +593,11 @@ void MackAlgo::moveOneCell(Cell* target) {
 
 #if (SIMULATOR)
 void MackAlgo::setColor(int x, int y, char color) {
-    m_mouse->colorTile(x, y, color);
+    m_mouse->setTileColor(x, y, color);
 }
 
 void MackAlgo::resetColors() {
-    m_mouse->resetColors();
+    m_mouse->clearAllTileColor();
 }
 
 void MackAlgo::colorCenter(char color) {

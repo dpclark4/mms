@@ -16,11 +16,25 @@
 
 namespace sim {
 
-Mouse::Mouse(const Maze* maze) : m_maze(maze), m_rotation(Radians(0.0)) {
+Mouse::Mouse(const Maze* maze) : m_maze(maze), m_initialized(false), m_rotation(Radians(0.0)) {
+}
+
+bool Mouse::getInitialized() {
+    return m_initialized;
+}
+
+bool Mouse::initialize(const std::string& mouseFile) {
+
+    // A mouse may only be initiaized once
+    ASSERT(!m_initialized);
+
+    // TODO: This should fail at most once
+
+    // TODO: What to do if this fails??? Make sure this file exists...
+    // TODO: Just return false - abort...
 
     // Create the mouse parser object
-    // TODO: Make sure this file exists...
-    MouseParser parser(getProjectDirectory() + P()->mouseFile());
+    MouseParser parser(SimUtilities::getProjectDirectory() + P()->mouseDirectory() + mouseFile);
 
     // Initialize the body of the mouse
     m_initialBodyPolygon = parser.getBody();
@@ -30,7 +44,7 @@ Mouse::Mouse(const Maze* maze) : m_maze(maze), m_rotation(Radians(0.0)) {
     m_rightWheel = parser.getRightWheel();
 
     // TODO: Validate the contents of the mouse file (like valid mouse starting position)
-    // Note: The position of the wheels must be the exact same at the start of execution
+    // Note: The y-position of the wheels must be the exact same at the start of execution
     ASSERT(m_leftWheel.getInitialTranslation().getY() == m_rightWheel.getInitialTranslation().getY());
 
     // Reassign the translation to be the midpoint of the axis connecting the two wheels
@@ -41,6 +55,12 @@ Mouse::Mouse(const Maze* maze) : m_maze(maze), m_rotation(Radians(0.0)) {
 
     // Initialize the sensors
     m_sensors = parser.getSensors();
+
+    // Indicate that we're done with the initiaization
+    m_initialized = true;
+
+    // Return success
+    return true;
 }
 
 Polygon Mouse::getCollisionPolygon() const {
@@ -62,7 +82,7 @@ void Mouse::initializeCollisionPolygon() {
     }
 
     // TODO: SOM: This should be changed to getUnion instead of convexHull, once it's ready
-    m_initialCollisionPolygon = convexHull(polygons);
+    m_initialCollisionPolygon = GeometryUtilities::convexHull(polygons);
 }
 
 Polygon Mouse::getBodyPolygon() const {
@@ -117,7 +137,7 @@ std::vector<Polygon> Mouse::getViewPolygons() const {
     return polygons;
 }
 
-void Mouse::update(const Time& elapsed) {
+void Mouse::update(const Duration& elapsed) {
 
     /*
      *  In a differential drive system (two-wheeled drive system), the angular velocities of
@@ -223,6 +243,10 @@ void Mouse::setWheelSpeeds(const AngularVelocity& leftWheelSpeed, const AngularV
     m_wheelMutex.unlock();
 }
 
+bool Mouse::hasSensor(const std::string& name) const {
+    return m_sensors.count(name) != 0;
+}
+
 float Mouse::read(const std::string& name) const {
 
     // Validate the input
@@ -238,12 +262,13 @@ float Mouse::read(const std::string& name) const {
         .rotateAroundPoint(currentRotation, currentTranslation);
     Polygon currentView = sensor.getCurrentView(
         fullView.getVertices().at(0), currentRotation + sensor.getInitialRotation(), *m_maze);
-    return 1.0 - polygonArea(currentView).getMetersSquared() / polygonArea(fullView).getMetersSquared();
+    return 1.0 - GeometryUtilities::polygonArea(currentView).getMetersSquared()
+               / GeometryUtilities::polygonArea(fullView).getMetersSquared();
 }
 
-Seconds Mouse::getReadTime(const std::string& name) const {
+Seconds Mouse::getReadDuration(const std::string& name) const {
     ASSERT(m_sensors.count(name) != 0);
-    return m_sensors.at(name).getReadTime();
+    return m_sensors.at(name).getReadDuration();
 }
 
 Cartesian Mouse::getInitialTranslation() const {

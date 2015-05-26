@@ -4,40 +4,53 @@
 #include <vector>
 
 #include <glut.h>
-#include <TTime.h>
+#include <Duration.h>
 
 namespace sim {
 
-// Quits the simulation
-void quit();
+class SimUtilities {
 
-// Prints a message to stdout
-void print(const std::string& msg);
+public:
 
-// Returns a float in [0.0, 1.0]
-float getRandom();
+    // Quits the simulation
+    static void quit();
 
-// Sleeps the current thread for ms milliseconds
-void sleep(const Time& time);
+    // Prints a message to stdout
+    static void print(const std::string& msg);
 
-// Like time() in <ctime> but higher resolution
-double getHighResTime();
+    // Returns a float in [0.0, 1.0]
+    static float getRandom();
 
-// Returns the path the mms project directory
-std::string getProjectDirectory();
+    // Sleeps the current thread for ms milliseconds
+    static void sleep(const Duration& duration);
 
-// Convert between types
-bool isBool(std::string str);
-bool isInt(std::string str);
-bool isFloat(std::string str);
-bool strToBool(std::string str);
-int strToInt(std::string str);
-float strToFloat(std::string str);
+    // Like time() in <ctime> but higher resolution
+    static double getHighResTime();
 
-// Tokenizes a string on whitespace
-std::vector<std::string> tokenize(std::string str);
+    // Returns the path the mms project directory
+    static std::string getProjectDirectory();
 
-// True if path is a path to a file, false otherwise
-bool isFile(std::string path);
+    // Convert between types
+    static bool isBool(std::string str);
+    static bool isInt(std::string str);
+    static bool isFloat(std::string str);
+    static bool strToBool(std::string str);
+    static int strToInt(std::string str);
+    static float strToFloat(std::string str);
+
+    // Tokenizes a string on whitespace
+    static std::vector<std::string> tokenize(std::string str);
+
+    // Returns the string str with the leading and trailing spaces removed
+    static std::string trim(const std::string& str);
+
+    // True if path is a path to a file, false otherwise
+    static bool isFile(std::string path);
+
+private:
+    // A private constructor to restrict creation of any GeometryUtilities objects
+    SimUtilities();
+
+};
 
 } // namespace sim

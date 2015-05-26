@@ -24,6 +24,9 @@ public:
     std::string tileBaseColor();
     std::string tileWallColor();
     std::string tileCornerColor();
+    std::string tileTextColor();
+    std::string tileUndeclaredWallColor();
+    std::string tileUndeclaredNoWallColor();
     std::string mouseBodyColor();
     std::string mouseWheelColor();
     std::string mouseSensorColor();
@@ -35,10 +38,10 @@ public:
 
     // Simulation parameters
     int randomSeed();
-    float glutInitTime();
+    float glutInitDuration();
     bool defaultPaused();
     std::string crashMessage();
-    float discreteInterfaceSleepTime();
+    float discreteInterfaceSleepDuration();
     float discreteInterfaceMinSpeed();
     float discreteInterfaceMaxSpeed();
     float discreteInterfaceDefaultSpeed();
@@ -56,17 +59,20 @@ public:
     std::string mazeDirectory();
     std::string mazeFile();
     bool useMazeFile();
-    int randomMazeWidth();
-    int randomMazeHeight();
     float wallWidth();
     float wallLength();
     float wallHeight();
+    int generatedMazeWidth();
+    int generatedMazeHeight();
     bool enforceOfficialMazeRules();
-    std::string randomMazeAlgo();
-    bool saveRandomMaze();
+    std::string mazeGenerationAlgo();
+    bool saveGeneratedMaze();
 
     // Mouse parameters
-    std::string mouseFile();
+    std::string mouseDirectory();
+
+    // Algorithm parameters
+    std::string algorithm();
 
 private:
 
@@ -80,11 +86,12 @@ private:
     int m_pixelsPerMeter;
     int m_frameRate;
     bool m_printLateFrames;
-    int m_windowWidth;
-    int m_windowHeight;
     std::string m_tileBaseColor;
     std::string m_tileWallColor;
     std::string m_tileCornerColor;
+    std::string m_tileTextColor;
+    std::string m_tileUndeclaredWallColor;
+    std::string m_tileUndeclaredNoWallColor;
     std::string m_mouseBodyColor;
     std::string m_mouseWheelColor;
     std::string m_mouseSensorColor;
@@ -96,10 +103,10 @@ private:
 
     // Simulation parameters
     int m_randomSeed;
-    float m_glutInitTime;
+    float m_glutInitDuration;
     bool m_defaultPaused;
     std::string m_crashMessage;
-    float m_discreteInterfaceSleepTime;
+    float m_discreteInterfaceSleepDuration;
     float m_discreteInterfaceMinSpeed;
     float m_discreteInterfaceMaxSpeed;
     float m_discreteInterfaceDefaultSpeed;
@@ -117,17 +124,20 @@ private:
     std::string m_mazeDirectory;
     std::string m_mazeFile;
     bool m_useMazeFile;
-    int m_randomMazeWidth;
-    int m_randomMazeHeight;
     float m_wallWidth;
     float m_wallLength;
     float m_wallHeight;
+    int m_generatedMazeWidth;
+    int m_generatedMazeHeight;
     bool m_enforceOfficialMazeRules;
-    std::string m_randomMazeAlgo;
-    bool m_saveRandomMaze;
+    std::string m_mazeGenerationAlgo;
+    bool m_saveGeneratedMaze;
 
     // Mouse parameters
-    std::string m_mouseFile;
+    std::string m_mouseDirectory;
+
+    // Algorithm parameters
+    std::string m_algorithm;
 };
 
 } // namespace sim
